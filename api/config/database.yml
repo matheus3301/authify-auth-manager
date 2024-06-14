@@ -1,0 +1,17 @@
+# config/database.yml
+
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+
+development:
+  url: <%= ENV['DATABASE_URL'] || 'postgres://postgres:postgres@localhost/db_auth_dev' %>
+
+test:
+  url: <%= ENV['DATABASE_URL'] || 'postgres://postgres:postgres@localhost/db_auth_test' %>
+
+production:
+  url: <%= ENV['DATABASE_URL'] %>
+

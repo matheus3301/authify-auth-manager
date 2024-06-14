@@ -1,0 +1,64 @@
+version: '3.8'
+services:
+  postgres_dev:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_auth_dev
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:12
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: db_auth_test
+    volumes:
+      - ./data/postgres_test:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6.2
+    restart: always
+    volumes:
+      - ./data/redis:/data
+
+  rabbitmq:
+    image: rabbitmq:3
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./data/rabbitmq:/var/lib/rabbitmq
+
+  api:
+    build: ./api
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres_dev:5432/db_auth_dev
+      - REDIS_URL=redis://redis:6379/0
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      - RACK_ENV=development
+      - PUMA_METRICS_PORT=3001
+      - PUMA_METRICS_USER=metrics
+      - PUMA_METRICS_PASS=metrics
+      - PUMA_METRICS_PATH=/metrics
+      - PUMA_METRICS_INTERVAL=10
+      - PUMA_METRICS_PREFIX=api
+      - PUMA_METRICS_ENABLE_TAGS=true
+      - PUMA_METRICS_TAGS=app:api,env:dev
+      - PUMA_METRICS_ENABLE_METRICS=true
+      - PUMA_METRICS_METRICS=app:api,env:dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres_dev
+      - redis
+      - rabbitmq
